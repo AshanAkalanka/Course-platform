@@ -12,6 +12,8 @@ const enrollmentRoutes = require('./routes/enrollmentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const progressRoutes = require('./routes/progressRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const courseMediaRoutes = require('./routes/courseMediaRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const errorMiddleware = require('./middleware/errorMiddleware');
 
 dotenv.config();
@@ -47,6 +49,8 @@ app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/materials', courseMediaRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use(errorMiddleware);
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api, { getErrorMessage } from '../api/axios';
 import Alert from '../components/Alert';
+import MaterialIcon from '../components/MaterialIcon';
 
 const initialForm = {
     course_id: '',
@@ -190,12 +191,13 @@ const AdminLessons = () => {
 
                         <div className="admin-form-actions">
                             <button type="submit" className="btn-primary">
+                                <MaterialIcon name={editingLessonId ? 'save' : 'add_circle'} />
                                 {editingLessonId ? 'Update Lesson' : 'Add Lesson'}
                             </button>
 
                             {editingLessonId && (
                                 <button type="button" className="btn-secondary" onClick={resetForm}>
-                                    Cancel Edit
+                                    <MaterialIcon name="close" /> Cancel Edit
                                 </button>
                             )}
                         </div>
@@ -221,10 +223,10 @@ const AdminLessons = () => {
                                     <td className="video-url-cell">{lesson.video_url}</td>
                                     <td className="table-actions">
                                         <button className="btn-small edit-btn" onClick={() => handleEdit(lesson)}>
-                                            Edit
+                                            <MaterialIcon name="edit" /> Edit
                                         </button>
                                         <button className="btn-small delete-btn" onClick={() => handleDelete(lesson.id)}>
-                                            Delete
+                                            <MaterialIcon name="delete" /> Delete
                                         </button>
                                     </td>
                                 </tr>

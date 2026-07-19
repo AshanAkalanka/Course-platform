@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import api, { getErrorMessage } from '../api/axios';
 import Alert from '../components/Alert';
 import { getVideoSource } from '../utils/video';
+import MaterialIcon from '../components/MaterialIcon';
 
 const WatchLesson = () => {
     const { id } = useParams();
@@ -64,16 +65,25 @@ const WatchLesson = () => {
     const nextLesson = selectedLessonIndex >= 0 && selectedLessonIndex < (course?.lessons?.length ?? 0) - 1
         ? course?.lessons[selectedLessonIndex + 1]
         : null;
+    const completedCount = progress.completedLessonIds.length;
+    const totalLessons = course?.lessons?.length || 0;
+    const selectedLessonCompleted = selectedLesson ? progress.completedLessonIds.includes(selectedLesson.id) : false;
 
     const markComplete = async (lessonId) => {
+        if (progress.completedLessonIds.includes(lessonId)) {
+            setMessage('This lesson is already completed.');
+            return;
+        }
+
         try {
             await api.post('/progress/complete', {
                 course_id: id,
                 lesson_id: lessonId
             });
-            setMessage('Lesson marked as completed');
+            setMessage(nextLesson ? 'Lesson completed. Your next lesson is ready.' : 'Lesson completed. You reached the end of this course.');
             const res = await api.get(`/progress/course/${id}`);
             setProgress(res.data);
+            if (nextLesson) setSelectedLesson(nextLesson);
         } catch (error) {
             setErrorMessage(getErrorMessage(error));
         }
@@ -83,41 +93,46 @@ const WatchLesson = () => {
     if (!course) return <div className="page"><div className="empty-state">Unable to load lessons.</div></div>;
 
     return (
-        <div className="page">
+        <main className="page lesson-watch-page">
             <div className="page-header">
                 <p className="eyebrow">Watch lessons</p>
                 <h2>{course.title}</h2>
                 <p className="page-subtitle">Choose a lesson, watch the content, and mark progress as you complete each step.</p>
+                <Link to="/my-learning" className="page-header-link"><MaterialIcon name="arrow_back" /> My learning</Link>
             </div>
 
             <Alert type="success" message={message} />
             <Alert type="error" message={errorMessage} />
 
-            <div className="progress-section">
-                <p><strong>Course Progress:</strong> {progress.percentage}%</p>
-                <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${progress.percentage}%` }}></div>
+            <section className="lesson-progress-panel fade-up" aria-label="Course progress">
+                <div>
+                    <span className="lesson-progress-icon"><MaterialIcon name="monitoring" /></span>
+                    <div><p>Course progress</p><strong>{completedCount} of {totalLessons} lessons completed</strong></div>
                 </div>
-            </div>
+                <div className="lesson-progress-meter"><span style={{ width: `${progress.percentage}%` }} /></div>
+                <b>{progress.percentage}%</b>
+            </section>
 
             <div className="watch-page-layout">
                 <div className="lesson-sidebar fade-up">
-                    <h3>Lessons</h3>
+                    <div className="lesson-sidebar-heading"><div><p className="eyebrow">Course content</p><h3>Lessons</h3></div><span>{totalLessons}</span></div>
                     {course.lessons?.map((lesson) => {
                         const completed = progress.completedLessonIds.includes(lesson.id);
 
                         return (
-                            <div
+                            <button
+                                type="button"
                                 key={lesson.id}
                                 className={`lesson-item ${selectedLesson?.id === lesson.id ? 'active-lesson' : ''}`}
-                                onClick={() => setSelectedLesson(lesson)}
+                                onClick={() => {
+                                    setSelectedLesson(lesson);
+                                    setMessage('');
+                                }}
                             >
-                                <p>{lesson.lesson_order}. {lesson.title}</p>
-                                <div className="lesson-item-footer">
-                                    <span>{completed ? 'Completed' : 'Not completed'}</span>
-                                    <span>{completed ? 'Ready for review' : 'Next action'}</span>
-                                </div>
-                            </div>
+                                <span className={`lesson-number ${completed ? 'complete' : ''}`}>{completed ? <MaterialIcon name="check" /> : lesson.lesson_order}</span>
+                                <span className="lesson-item-copy"><strong>{lesson.title}</strong><small>{completed ? 'Completed' : selectedLesson?.id === lesson.id ? 'Now playing' : 'Not completed'}</small></span>
+                                <MaterialIcon name="chevron_right" />
+                            </button>
                         );
                     })}
                 </div>
@@ -150,7 +165,7 @@ const WatchLesson = () => {
                                         This video host does not support direct inline playback here.
                                     </p>
                                     <a className="btn-primary" href={videoSource.src} target="_blank" rel="noreferrer">
-                                        Open Video
+                                        <MaterialIcon name="open_in_new" /> Open Video
                                     </a>
                                 </div>
                             ) : (
@@ -161,28 +176,32 @@ const WatchLesson = () => {
                                 )
                             )}
 
-                            <h3>{selectedLesson.title}</h3>
-                            <p>{selectedLesson.content}</p>
+                            <div className="lesson-player-heading">
+                                <div><p className="eyebrow">Lesson {selectedLesson.lesson_order}</p><h3>{selectedLesson.title}</h3></div>
+                                {selectedLessonCompleted && <span><MaterialIcon name="check_circle" filled /> Completed</span>}
+                            </div>
+                            {selectedLesson.content && <p>{selectedLesson.content}</p>}
                             <div className="lesson-player-actions">
                                 <button
                                     className="btn-ghost"
                                     onClick={() => previousLesson && setSelectedLesson(previousLesson)}
                                     disabled={!previousLesson}
                                 >
-                                    Previous Lesson
+                                    <MaterialIcon name="arrow_back" /> Previous Lesson
                                 </button>
                                 <button
                                     className="btn-primary"
                                     onClick={() => markComplete(selectedLesson.id)}
+                                    disabled={selectedLessonCompleted}
                                 >
-                                    Mark as Complete
+                                    <MaterialIcon name="check_circle" /> {selectedLessonCompleted ? 'Lesson completed' : 'Mark as complete'}
                                 </button>
                                 <button
                                     className="btn-ghost"
                                     onClick={() => nextLesson && setSelectedLesson(nextLesson)}
                                     disabled={!nextLesson}
                                 >
-                                    Next Lesson
+                                    Next Lesson <MaterialIcon name="arrow_forward" />
                                 </button>
                             </div>
                         </>
@@ -191,7 +210,7 @@ const WatchLesson = () => {
                     )}
                 </div>
             </div>
-        </div>
+        </main>
     );
 };
 

@@ -1,1 +1,52 @@
-.idea
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Production builds and test output
+dist/
+client/dist/
+server/dist/
+build/
+coverage/
+.vite/
+
+# Environment files and local secrets
+.env
+.env.*
+!.env.example
+client/.env
+server/.env
+
+# User-uploaded runtime content
+server/uploads/
+!server/uploads/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE and editor files
+.idea/
+.vscode/
+*.code-workspace
+*.swp
+*.swo
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
+
+
+client/assets/

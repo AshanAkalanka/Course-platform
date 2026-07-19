@@ -7,7 +7,10 @@ const {
     deleteUser,
     getCategories,
     createCategory,
-    deleteCategory
+    deleteCategory,
+    getPendingEnrollments,
+    approveEnrollment,
+    rejectEnrollment
 } = require('../controllers/adminController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
@@ -19,5 +22,8 @@ router.delete('/users/:id', authMiddleware, roleMiddleware('admin'), deleteUser)
 router.get('/categories', authMiddleware, roleMiddleware('admin'), getCategories);
 router.post('/categories', authMiddleware, roleMiddleware('admin'), createCategory);
 router.delete('/categories/:name', authMiddleware, roleMiddleware('admin'), deleteCategory);
+router.get('/enrollments', authMiddleware, roleMiddleware('admin'), getPendingEnrollments);
+router.put('/enrollments/:id/approve', authMiddleware, roleMiddleware('admin'), approveEnrollment);
+router.put('/enrollments/:id/reject', authMiddleware, roleMiddleware('admin'), rejectEnrollment);
 
 module.exports = router;

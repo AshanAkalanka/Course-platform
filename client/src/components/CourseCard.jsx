@@ -1,26 +1,27 @@
 import { Link } from 'react-router-dom';
 import { getCourseImage } from '../utils/media';
+import MaterialIcon from './MaterialIcon';
 
 const CourseCard = ({ course, index = 0 }) => {
     const imageUrl = getCourseImage(course, index);
 
     return (
-        <div className="course-card fade-up">
+        <article className="course-card fade-up">
             <div className="course-card-media">
-                <img src={imageUrl} alt={course.title} />
+                {imageUrl ? <img src={imageUrl} alt={course.title} /> : <div className="course-card-placeholder"><MaterialIcon name="auto_stories" /></div>}
             </div>
             <div className="course-card-body">
-                <div className="course-card-topline">
-                    <span className="badge">{course.category || 'General'}</span>
-                    <span className="meta-pill alt">{course.level || 'All levels'}</span>
-                </div>
+                {(course.category || course.level) && <div className="course-card-topline">
+                    {course.category && <span className="badge">{course.category}</span>}
+                    {course.level && <span className="meta-pill alt">{course.level}</span>}
+                </div>}
                 <h3>{course.title}</h3>
-                <p>{course.description?.slice(0, 110) || 'Explore practical lessons and guided projects.'}...</p>
+                {course.description && <p>{course.description.slice(0, 96)}{course.description.length > 96 ? '...' : ''}</p>}
                 <div className="course-card-actions">
-                    <Link to={`/courses/${course.id}`} className="btn-primary">View Course</Link>
+                    <Link to={`/courses/${course.id}`} className="btn-primary">View Course <MaterialIcon name="arrow_forward" /></Link>
                 </div>
             </div>
-        </div>
+        </article>
     );
 };
 

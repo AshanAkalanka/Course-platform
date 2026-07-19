@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api, { getErrorMessage } from '../api/axios';
 import Alert from '../components/Alert';
+import MaterialIcon from '../components/MaterialIcon';
 
 const AdminMessages = () => {
     const [messages, setMessages] = useState([]);
@@ -95,11 +96,11 @@ const AdminMessages = () => {
                                     <div className="message-detail-actions">
                                         {!selected.is_read && (
                                             <button className="btn-secondary btn-small" onClick={() => handleMarkRead(selected.id)}>
-                                                Mark Read
+                                                <MaterialIcon name="mark_email_read" /> Mark Read
                                             </button>
                                         )}
                                         <button className="btn-ghost btn-small" onClick={() => handleDelete(selected.id)}>
-                                            Delete
+                                            <MaterialIcon name="delete" /> Delete
                                         </button>
                                     </div>
                                 </div>

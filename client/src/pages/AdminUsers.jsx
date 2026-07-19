@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api, { getErrorMessage } from '../api/axios';
 import Alert from '../components/Alert';
+import MaterialIcon from '../components/MaterialIcon';
 
 const AdminUsers = () => {
     const [users, setUsers] = useState([]);
@@ -92,7 +93,7 @@ const AdminUsers = () => {
                                     className="btn-small delete-btn"
                                     onClick={() => deleteUser(user.id)}
                                 >
-                                    Delete
+                                    <MaterialIcon name="person_remove" /> Delete
                                 </button>
                             </td>
                         </tr>

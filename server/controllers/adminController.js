@@ -1,4 +1,26 @@
 const pool = require('../config/db');
+const { createNotification } = require('./notificationController');
+
+// Compatible with all MySQL versions — checks INFORMATION_SCHEMA before altering
+const ensureEnrollmentStatus = async () => {
+    try {
+        const [cols] = await pool.execute(`
+            SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME   = 'enrollments'
+              AND COLUMN_NAME  = 'status'
+        `);
+        if (cols.length === 0) {
+            await pool.execute(`
+                ALTER TABLE enrollments
+                ADD COLUMN status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending'
+            `);
+        }
+    } catch (_) {
+        // Ignore — column already exists or table not ready
+    }
+};
 
 const ensureCategoriesTable = async () => {
     await pool.execute(`
@@ -135,6 +157,84 @@ const deleteCategory = async (req, res) => {
     }
 };
 
+const getPendingEnrollments = async (req, res) => {
+    try {
+        await ensureEnrollmentStatus();
+        const [rows] = await pool.execute(
+            `SELECT e.id, e.status, e.user_id, e.course_id,
+                    u.name AS user_name, u.email AS user_email,
+                    c.title AS course_title
+             FROM enrollments e
+             JOIN users u ON e.user_id = u.id
+             JOIN courses c ON e.course_id = c.id
+             ORDER BY e.id DESC`
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error('getPendingEnrollments error:', error);
+        res.status(500).json({ message: 'Failed to fetch enrollments' });
+    }
+};
+
+const approveEnrollment = async (req, res) => {
+    try {
+        await ensureEnrollmentStatus();
+        const { id } = req.params;
+
+        // Get user_id and course title before updating
+        const [rows] = await pool.execute(
+            `SELECT e.user_id, c.title AS course_title
+             FROM enrollments e
+             JOIN courses c ON e.course_id = c.id
+             WHERE e.id = ?`,
+            [id]
+        );
+
+        await pool.execute("UPDATE enrollments SET status = 'approved' WHERE id = ?", [id]);
+
+        if (rows.length > 0) {
+            await createNotification(
+                rows[0].user_id,
+                '✅ Enrollment Approved',
+                `Your enrollment request for "${rows[0].course_title}" has been approved. You can now access the course.`
+            );
+        }
+
+        res.json({ message: 'Enrollment approved' });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to approve enrollment' });
+    }
+};
+
+const rejectEnrollment = async (req, res) => {
+    try {
+        await ensureEnrollmentStatus();
+        const { id } = req.params;
+
+        const [rows] = await pool.execute(
+            `SELECT e.user_id, c.title AS course_title
+             FROM enrollments e
+             JOIN courses c ON e.course_id = c.id
+             WHERE e.id = ?`,
+            [id]
+        );
+
+        await pool.execute("UPDATE enrollments SET status = 'rejected' WHERE id = ?", [id]);
+
+        if (rows.length > 0) {
+            await createNotification(
+                rows[0].user_id,
+                '❌ Enrollment Rejected',
+                `Your enrollment request for "${rows[0].course_title}" was not approved. Please contact support if you believe this is a mistake.`
+            );
+        }
+
+        res.json({ message: 'Enrollment rejected' });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to reject enrollment' });
+    }
+};
+
 module.exports = {
     getAdminStats,
     getAllUsers,
@@ -142,5 +242,8 @@ module.exports = {
     deleteUser,
     getCategories,
     createCategory,
-    deleteCategory
+    deleteCategory,
+    getPendingEnrollments,
+    approveEnrollment,
+    rejectEnrollment
 };

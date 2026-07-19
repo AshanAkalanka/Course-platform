@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api, { getErrorMessage } from '../api/axios';
 import Alert from '../components/Alert';
 import { getAssetUrl } from '../utils/media';
+import MaterialIcon from '../components/MaterialIcon';
 
 const initialForm = {
     title: '',
@@ -203,7 +204,7 @@ const AdminCourses = () => {
                         onChange={(e) => setNewCategory(e.target.value)}
                         required
                     />
-                    <button type="submit" className="btn-primary">Add Category</button>
+                    <button type="submit" className="btn-primary"><MaterialIcon name="add" /> Add Category</button>
                 </div>
 
                 {categories.length > 0 && (
@@ -216,7 +217,7 @@ const AdminCourses = () => {
                                     className="btn-small delete-btn"
                                     onClick={() => handleDeleteCategory(category)}
                                 >
-                                    Remove
+                                    <MaterialIcon name="close" /> Remove
                                 </button>
                             </div>
                         ))}
@@ -280,12 +281,13 @@ const AdminCourses = () => {
 
                 <div className="admin-form-actions">
                     <button type="submit" className="btn-primary" disabled={loading}>
+                        <MaterialIcon name={editingId ? 'save' : 'add_circle'} />
                         {loading ? 'Saving...' : editingId ? 'Update Course' : 'Create Course'}
                     </button>
 
                     {editingId && (
                         <button type="button" className="btn-secondary" onClick={resetForm}>
-                            Cancel Edit
+                            <MaterialIcon name="close" /> Cancel Edit
                         </button>
                     )}
                 </div>
@@ -319,10 +321,10 @@ const AdminCourses = () => {
                             <td>{course.level}</td>
                             <td className="table-actions">
                                 <button className="btn-small edit-btn" onClick={() => handleEdit(course)}>
-                                    Edit
+                                    <MaterialIcon name="edit" /> Edit
                                 </button>
                                 <button className="btn-small delete-btn" onClick={() => handleDelete(course.id)}>
-                                    Delete
+                                    <MaterialIcon name="delete" /> Delete
                                 </button>
                             </td>
                         </tr>

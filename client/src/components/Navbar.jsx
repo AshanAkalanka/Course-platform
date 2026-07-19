@@ -1,11 +1,71 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
+import api from '../api/axios';
+import MaterialIcon from './MaterialIcon';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [bellOpen, setBellOpen] = useState(false);
+    const bellRef = useRef(null);
+
     const getNavClassName = ({ isActive }) => `nav-link${isActive ? ' nav-link-active' : ''}`;
+
+    // Fetch notifications every 30 seconds while logged in
+    useEffect(() => {
+        if (!user) return undefined;
+
+        const fetchNotifications = async () => {
+            try {
+                const res = await api.get('/notifications');
+                setNotifications(res.data);
+            } catch {
+                setNotifications([]);
+            }
+        };
+
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 30000);
+        return () => clearInterval(interval);
+    }, [user]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (bellRef.current && !bellRef.current.contains(e.target)) {
+                setBellOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const unreadCount = notifications.filter(n => !n.is_read).length;
+
+    const handleMarkRead = async (id) => {
+        try {
+            await api.put(`/notifications/${id}/read`);
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+        } catch {
+            return;
+        }
+    };
+
+    const handleMarkAllRead = async () => {
+        try {
+            await api.put('/notifications/read-all');
+            setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        } catch {
+            return;
+        }
+    };
+
+    const formatNotificationDate = (dateStr) => new Intl.DateTimeFormat(undefined, {
+        month: 'short',
+        day: 'numeric'
+    }).format(new Date(dateStr));
 
     return (
         <header className="site-header">
@@ -22,39 +82,99 @@ const Navbar = () => {
                         aria-expanded={menuOpen}
                         onClick={() => setMenuOpen(o => !o)}
                     >
-                        <span></span>
-                        <span></span>
-                        <span></span>
+                        <MaterialIcon name={menuOpen ? 'close' : 'menu'} />
                     </button>
 
                     <div className={`nav-links${menuOpen ? ' nav-links-open' : ''}`}>
                         {user?.role !== 'admin' && (
-                            <NavLink to="/" className={getNavClassName} onClick={() => setMenuOpen(false)}>Home</NavLink>
+                            <>
+                                <NavLink to="/" className={getNavClassName} onClick={() => setMenuOpen(false)}>Home</NavLink>
+                                <NavLink to="/courses" className={getNavClassName} onClick={() => setMenuOpen(false)}>Courses</NavLink>
+                                <NavLink to="/contact" className={getNavClassName} onClick={() => setMenuOpen(false)}>Contact</NavLink>
+                            </>
                         )}
-                        <NavLink to="/courses" className={getNavClassName} onClick={() => setMenuOpen(false)}>Courses</NavLink>
 
-                        {user && <NavLink to="/profile" className={getNavClassName} onClick={() => setMenuOpen(false)}>Profile</NavLink>}
+
 
                         {user && user.role !== 'admin' && (
                             <NavLink to="/my-learning" className={getNavClassName} onClick={() => setMenuOpen(false)}>My Learning</NavLink>
                         )}
 
                         {user?.role === 'admin' && (
-                            <>
-                                <NavLink to="/admin" end className={getNavClassName} onClick={() => setMenuOpen(false)}>Dashboard</NavLink>
-                                <NavLink to="/admin/courses" className={getNavClassName} onClick={() => setMenuOpen(false)}>Courses</NavLink>
-                                <NavLink to="/admin/lessons" className={getNavClassName} onClick={() => setMenuOpen(false)}>Lessons</NavLink>
-                                <NavLink to="/admin/users" className={getNavClassName} onClick={() => setMenuOpen(false)}>Users</NavLink>
-                            </>
+                            <NavLink to="/admin" className={getNavClassName} onClick={() => setMenuOpen(false)}>
+                                Admin Panel
+                            </NavLink>
                         )}
 
                         {!user ? (
-                            <>
-                                <NavLink to="/login" className={getNavClassName} onClick={() => setMenuOpen(false)}>Login</NavLink>
-                                <NavLink to="/register" className={getNavClassName} onClick={() => setMenuOpen(false)}>Register</NavLink>
-                            </>
+                            <div className="nav-auth-actions">
+                                <NavLink to="/login" className="nav-login" onClick={() => setMenuOpen(false)}>Log in</NavLink>
+                                <NavLink to="/register" className="nav-join" onClick={() => setMenuOpen(false)}>Join now</NavLink>
+                            </div>
                         ) : (
-                            <button onClick={() => { logout(); setMenuOpen(false); }} className="nav-logout">Logout</button>
+                            <div className="nav-user-actions">
+                                {/* Bell icon */}
+                                <div className="notif-bell-wrap" ref={bellRef}>
+                                    <button
+                                        className="notif-bell-btn"
+                                        onClick={() => setBellOpen(o => !o)}
+                                        aria-label="Notifications"
+                                    >
+                                        <MaterialIcon name="notifications" filled={unreadCount > 0} />
+                                        {unreadCount > 0 && (
+                                            <span className="notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                                        )}
+                                    </button>
+
+                                    {bellOpen && (
+                                        <div className="notif-dropdown">
+                                            <div className="notif-dropdown-header">
+                                                <span>Notifications</span>
+                                                {unreadCount > 0 && (
+                                                    <button className="notif-mark-all" onClick={handleMarkAllRead}>
+                                                        Mark all read
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            <div className="notif-list">
+                                                {notifications.length === 0 ? (
+                                                    <div className="notif-empty">No notifications yet.</div>
+                                                ) : (
+                                                    notifications.map(n => (
+                                                        <div
+                                                            key={n.id}
+                                                            className={`notif-item${!n.is_read ? ' notif-item-unread' : ''}`}
+                                                            onClick={() => !n.is_read && handleMarkRead(n.id)}
+                                                        >
+                                                            <div className="notif-item-title" style={{ color: n.is_urgent ? '#e53e3e' : '' }}>
+                                                                {n.is_urgent && <MaterialIcon name="warning" filled />}
+                                                                {n.title}
+                                                            </div>
+                                                            <div className="notif-item-msg" style={{ color: n.is_urgent ? '#c53030' : '' }}>
+                                                                {n.message}
+                                                            </div>
+                                                            <div className="notif-item-time">{formatNotificationDate(n.created_at)}</div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <NavLink
+                                    to="/profile"
+                                    className={({ isActive }) => `${getNavClassName({ isActive })} nav-profile-link`}
+                                    onClick={() => setMenuOpen(false)}
+                                    aria-label="Profile"
+                                    title="Profile"
+                                >
+                                    <span className="nav-avatar">{user?.name?.charAt(0)?.toUpperCase() || 'U'}</span>
+                                    <span className="nav-user-copy">Hi, {user?.name?.split(' ')[0] || 'Learner'} <MaterialIcon name="expand_more" /></span>
+                                </NavLink>
+                                <button className="nav-logout" onClick={() => { logout(); setMenuOpen(false); }}><MaterialIcon name="logout" /> Logout</button>
+                            </div>
                         )}
                     </div>
                 </div>

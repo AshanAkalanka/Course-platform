@@ -73,6 +73,16 @@ const AdminDashboard = () => {
                     <h3>Messages</h3>
                     <p>View and respond to contact form submissions</p>
                 </Link>
+
+                <Link to="/admin/enrollments" className="admin-link-card fade-up">
+                    <h3>Enrollment Requests</h3>
+                    <p>Approve or reject student enrollment requests</p>
+                </Link>
+
+                <Link to="/admin/materials" className="admin-link-card fade-up">
+                    <h3>Course Materials</h3>
+                    <p>Upload PDFs, videos, images, notices &amp; messages per course</p>
+                </Link>
             </div>
 
             {loading && <div className="loading-panel" style={{ marginTop: '24px' }}></div>}

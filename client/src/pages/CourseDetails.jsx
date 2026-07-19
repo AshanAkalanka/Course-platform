@@ -4,6 +4,7 @@ import api, { getErrorMessage } from '../api/axios';
 import Alert from '../components/Alert';
 import { useAuth } from '../context/useAuth';
 import { getCourseImage } from '../utils/media';
+import MaterialIcon from '../components/MaterialIcon';
 
 const CourseDetails = () => {
     const { id } = useParams();
@@ -12,18 +13,19 @@ const CourseDetails = () => {
     const [course, setCourse] = useState(null);
     const [message, setMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
-    const [isEnrolled, setIsEnrolled] = useState(false);
+    const [enrollmentStatus, setEnrollmentStatus] = useState(null); // null | 'pending' | 'approved' | 'rejected'
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const loadPageData = async () => {
             try {
                 const courseRequest = api.get(`/courses/${id}`);
-                const enrollmentRequest = user ? api.get('/enrollments/my-courses') : Promise.resolve({ data: [] });
-                const [courseResponse, enrollmentResponse] = await Promise.all([courseRequest, enrollmentRequest]);
+                const statusRequest = user ? api.get('/enrollments/my-statuses') : Promise.resolve({ data: [] });
+                const [courseResponse, statusResponse] = await Promise.all([courseRequest, statusRequest]);
 
                 setCourse(courseResponse.data);
-                setIsEnrolled(enrollmentResponse.data.some((enrolledCourse) => Number(enrolledCourse.id) === Number(id)));
+                const found = statusResponse.data.find(e => Number(e.course_id) === Number(id));
+                setEnrollmentStatus(found ? found.status : null);
             } catch (error) {
                 setErrorMessage(getErrorMessage(error));
             }
@@ -35,10 +37,10 @@ const CourseDetails = () => {
     const handleEnroll = async () => {
         try {
             setIsSubmitting(true);
-            await api.post('/enrollments', { course_id: id });
-            setMessage('You have been enrolled successfully.');
+            const res = await api.post('/enrollments', { course_id: id });
+            setMessage(res.data.message || 'Enrollment request submitted. Awaiting admin approval.');
             setErrorMessage('');
-            setIsEnrolled(true);
+            setEnrollmentStatus('pending');
         } catch (error) {
             setErrorMessage(getErrorMessage(error));
         } finally {
@@ -47,6 +49,7 @@ const CourseDetails = () => {
     };
 
     if (!course && !errorMessage) return <div className="page"><div className="empty-state">Loading course...</div></div>;
+    const courseImage = course ? getCourseImage(course) : '';
 
     return (
         <div className="page">
@@ -56,7 +59,7 @@ const CourseDetails = () => {
             {course ? (
                 <div className="details-layout">
                     <div className="details-hero fade-up">
-                        <img src={getCourseImage(course)} alt={course.title} />
+                        {courseImage ? <img src={courseImage} alt={course.title} /> : <div className="details-hero-placeholder"><MaterialIcon name="auto_stories" /></div>}
                     </div>
 
                     <div className="details-card fade-up delay-1">
@@ -68,14 +71,14 @@ const CourseDetails = () => {
                             </div>
 
                             <div className="details-summary-grid">
-                                <div className="details-summary-card">
-                                    <strong>{course.category || 'General'}</strong>
+                                {course.category && <div className="details-summary-card">
+                                    <strong>{course.category}</strong>
                                     <span>Category</span>
-                                </div>
-                                <div className="details-summary-card">
-                                    <strong>{course.level || 'All levels'}</strong>
+                                </div>}
+                                {course.level && <div className="details-summary-card">
+                                    <strong>{course.level}</strong>
                                     <span>Level</span>
-                                </div>
+                                </div>}
                                 <div className="details-summary-card">
                                     <strong>{course.lessons?.length || 0}</strong>
                                     <span>Lessons</span>
@@ -84,30 +87,42 @@ const CourseDetails = () => {
                         </div>
 
                         <div className="details-meta">
-                            <span className="meta-pill">{course.category || 'General'}</span>
-                            <span className="meta-pill alt">{course.level || 'All levels'}</span>
+                            {course.category && <span className="meta-pill">{course.category}</span>}
+                            {course.level && <span className="meta-pill alt">{course.level}</span>}
                             <span>{course.lessons?.length || 0} lessons included</span>
                         </div>
 
                         {user ? (
                             <div className="course-card-actions">
-                                {isEnrolled ? (
+                                {enrollmentStatus === 'approved' && (
                                     <>
-                                        <span className="meta-pill">Already enrolled</span>
+                                        <span className="meta-pill"><MaterialIcon name="check_circle" filled /> Enrolled</span>
                                         <button className="btn-primary" onClick={() => navigate('/my-learning')}>
                                             Go to My Learning
                                         </button>
                                     </>
-                                ) : (
+                                )}
+                                {enrollmentStatus === 'pending' && (
+                                    <span className="meta-pill" style={{ background: '#fef9c3', color: '#854d0e' }}><MaterialIcon name="pending" /> Pending admin approval</span>
+                                )}
+                                {enrollmentStatus === 'rejected' && (
+                                    <>
+                                        <span className="meta-pill" style={{ background: '#fee2e2', color: '#991b1b' }}><MaterialIcon name="cancel" filled /> Rejected</span>
+                                        <button className="btn-primary" onClick={handleEnroll} disabled={isSubmitting}>
+                                            <MaterialIcon name="refresh" /> {isSubmitting ? 'Requesting...' : 'Request Again'}
+                                        </button>
+                                    </>
+                                )}
+                                {enrollmentStatus === null && (
                                     <button className="btn-primary" onClick={handleEnroll} disabled={isSubmitting}>
-                                        {isSubmitting ? 'Enrolling...' : 'Enroll Now'}
+                                        <MaterialIcon name="school" /> {isSubmitting ? 'Enrolling...' : 'Enroll Now'}
                                     </button>
                                 )}
                             </div>
                         ) : (
                             <div className="course-card-actions">
                                 <p className="page-subtitle">Create an account or sign in to enroll and track progress.</p>
-                                <Link to="/login" className="btn-primary">Sign in to enroll</Link>
+                                <Link to="/login" className="btn-primary"><MaterialIcon name="login" /> Sign in to enroll</Link>
                             </div>
                         )}
 
@@ -121,7 +136,7 @@ const CourseDetails = () => {
                                                 <strong>{lesson.lesson_order}. {lesson.title}</strong>
                                                 <span className="meta-pill alt">Lesson {lesson.lesson_order}</span>
                                             </div>
-                                            <p>{lesson.content || 'Lesson notes and supporting content will appear here.'}</p>
+                                            {lesson.content && <p>{lesson.content}</p>}
                                         </div>
                                     ))
                                 ) : (

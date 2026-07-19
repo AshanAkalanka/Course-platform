@@ -6,6 +6,7 @@ const Home = () => {
         <div className="home-editorial">
             <section className="home-hero fade-up">
                 <div className="home-hero-copy">
+                    <p className="home-kicker">Accessible online learning</p>
                     <h1>Learn skills that move you forward.</h1>
                     <p className="home-lead">
                         Explore online courses, enroll with ease, and continue learning through
@@ -13,7 +14,7 @@ const Home = () => {
                     </p>
                     <div className="home-actions">
                         <Link to="/courses" className="btn-primary">Explore Courses</Link>
-                        <Link to="/register" className="btn-ghost">Join Free</Link>
+                        <Link to="/register" className="btn-ghost">Create Account</Link>
                     </div>
                 </div>
 
@@ -39,9 +40,27 @@ const Home = () => {
                 </div>
             </section>
 
+            <section className="home-program-panels fade-up delay-2" aria-label="Learning highlights">
+                <div className="program-panel panel-light">
+                    <span>01.</span>
+                    <h3>Course Catalog</h3>
+                </div>
+                <div className="program-panel panel-dark">
+                    <span>02.</span>
+                    <h3>Structured Lessons</h3>
+                </div>
+                <div className="program-panel panel-red">
+                    <span>03.</span>
+                    <h3>Progress Tracking</h3>
+                </div>
+            </section>
+
             <section className="home-story fade-up delay-2">
                 <div className="home-story-side">
                     <img src={homepageImages.highlight} alt="Focused online learning" />
+                    <img src={homepageImages.secondary} alt="Students working together" />
+                    <img src={homepageImages.tertiary} alt="Library learning space" />
+                    <img src={homepageImages.gallery} alt="Campus learning community" />
                 </div>
 
                 <div className="home-story-main">
@@ -52,7 +71,7 @@ const Home = () => {
                     </p>
                     
                     <ol className="home-story-steps">
-                        <li><strong>Discover your niche:</strong> Explore hundreds of courses designed by experts.</li>
+                        <li><strong>Discover your path:</strong> Explore the courses currently available in the catalog.</li>
                         <li><strong>Enroll effortlessly:</strong> Join any course that fits your career aspirations with a single click.</li>
                         <li><strong>Track and conquer:</strong> Monitor your milestones using our interactive dashboards.</li>
                         <li><strong>Master the skill:</strong> Complete sequential, hands-on lessons tailored for immediate real-world application.</li>
@@ -62,7 +81,7 @@ const Home = () => {
                         <span>Course catalog</span>
                         <span>Structured lessons</span>
                         <span>Progress tracking</span>
-                        <span>Expert feedback</span>
+                        <span>Account support</span>
                     </div>
                 </div>
             </section>
