@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const { createNotification } = require('./notificationController');
+const { isDefaultCategory, mergeWithDefaultCategories } = require('../config/defaultCategories');
 
 // Compatible with all MySQL versions — checks INFORMATION_SCHEMA before altering
 const ensureEnrollmentStatus = async () => {
@@ -102,7 +103,7 @@ const getCategories = async (req, res) => {
              ORDER BY name ASC`
         );
 
-        res.json(rows.map((row) => row.name));
+        res.json(mergeWithDefaultCategories(rows.map((row) => row.name)));
     } catch (error) {
         res.status(500).json({ message: 'Failed to fetch categories' });
     }
@@ -115,6 +116,10 @@ const createCategory = async (req, res) => {
 
         if (!name) {
             return res.status(400).json({ message: 'Category name is required' });
+        }
+
+        if (isDefaultCategory(name)) {
+            return res.status(400).json({ message: 'This category is already included by default' });
         }
 
         await pool.execute(
@@ -136,6 +141,10 @@ const deleteCategory = async (req, res) => {
     try {
         await ensureCategoriesTable();
         const categoryName = decodeURIComponent(req.params.name);
+
+        if (isDefaultCategory(categoryName)) {
+            return res.status(400).json({ message: 'Default categories cannot be removed' });
+        }
 
         const [courseRows] = await pool.execute(
             'SELECT id FROM courses WHERE category = ? LIMIT 1',

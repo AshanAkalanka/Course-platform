@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api, { getErrorMessage } from '../api/axios';
 import Alert from '../components/Alert';
 import MaterialIcon from '../components/MaterialIcon';
+import AdminPageHeader from '../components/AdminPageHeader';
 
 const AdminUsers = () => {
     const [users, setUsers] = useState([]);
@@ -49,18 +50,33 @@ const AdminUsers = () => {
         }
     };
 
+    const adminCount = users.filter((user) => user.role === 'admin').length;
+    const studentCount = users.filter((user) => user.role === 'student').length;
+
     return (
-        <div className="page">
-            <div className="page-header">
-                <p className="eyebrow">Admin users</p>
-                <h2>Manage users and platform access.</h2>
-                <p className="page-subtitle">Update roles, review accounts, and remove users when needed.</p>
+        <div className="page admin-workspace-page admin-users-page">
+            <AdminPageHeader
+                icon="group"
+                eyebrow="People and access"
+                title="User directory"
+                description="Review accounts, change access roles, and manage the people using EduFlow."
+                tone="amber"
+            />
+
+            <div className="admin-page-metrics fade-up" aria-label="User account summary">
+                <article><span className="blue"><MaterialIcon name="groups" /></span><div><strong>{users.length}</strong><small>Total accounts</small></div></article>
+                <article><span className="green"><MaterialIcon name="school" /></span><div><strong>{studentCount}</strong><small>Students</small></div></article>
+                <article><span className="amber"><MaterialIcon name="admin_panel_settings" /></span><div><strong>{adminCount}</strong><small>Administrators</small></div></article>
             </div>
 
             <Alert type="success" message={message} />
             <Alert type="error" message={errorMessage} />
 
-            <div className="admin-table-wrapper fade-up">
+            <div className="admin-table-wrapper admin-data-panel fade-up">
+                <div className="admin-section-title">
+                    <div><span><MaterialIcon name="manage_accounts" /></span><div><h3>Account access</h3><p>Role changes are applied immediately.</p></div></div>
+                    <strong>{users.length} users</strong>
+                </div>
                 <table className="admin-table">
                     <thead>
                     <tr>

@@ -57,7 +57,7 @@ const Courses = () => {
                 .join(' ')
                 .toLowerCase();
             return (!search || searchableText.includes(search))
-                && (!filters.category || course.category === filters.category)
+                && (!filters.category || course.category?.trim().toLowerCase() === filters.category.trim().toLowerCase())
                 && (!filters.level || course.level === filters.level);
         });
 

@@ -72,8 +72,8 @@ const Navbar = () => {
             <nav className="navbar">
                 <div className="navbar-inner fade-up">
                     <NavLink to="/" className="nav-brand">
-                        <img src="/logo.png" alt="EduFlow Logo" className="nav-logo-img" />
-                        <span className="nav-logo">EduFlow</span>
+                        <img src="/eduflow-favicon.png" alt="" className="nav-logo-img" />
+                        <span className="nav-brand-copy"><strong>EduFlow</strong><small>Online learning</small></span>
                     </NavLink>
 
                     <button
@@ -86,30 +86,31 @@ const Navbar = () => {
                     </button>
 
                     <div className={`nav-links${menuOpen ? ' nav-links-open' : ''}`}>
-                        {user?.role !== 'admin' && (
-                            <>
-                                <NavLink to="/" className={getNavClassName} onClick={() => setMenuOpen(false)}>Home</NavLink>
-                                <NavLink to="/courses" className={getNavClassName} onClick={() => setMenuOpen(false)}>Courses</NavLink>
-                                <NavLink to="/contact" className={getNavClassName} onClick={() => setMenuOpen(false)}>Contact</NavLink>
-                            </>
-                        )}
+                        <div className="nav-primary-links">
+                            {user?.role !== 'admin' && (
+                                <>
+                                    <NavLink to="/" className={getNavClassName} onClick={() => setMenuOpen(false)}>Home</NavLink>
+                                    <NavLink to="/courses" className={getNavClassName} onClick={() => setMenuOpen(false)}>Courses</NavLink>
+                                    <NavLink to="/about" className={getNavClassName} onClick={() => setMenuOpen(false)}>About</NavLink>
+                                    <NavLink to="/contact" className={getNavClassName} onClick={() => setMenuOpen(false)}>Contact</NavLink>
+                                </>
+                            )}
 
+                            {user && user.role !== 'admin' && (
+                                <NavLink to="/my-learning" className={getNavClassName} onClick={() => setMenuOpen(false)}>My Learning</NavLink>
+                            )}
 
-
-                        {user && user.role !== 'admin' && (
-                            <NavLink to="/my-learning" className={getNavClassName} onClick={() => setMenuOpen(false)}>My Learning</NavLink>
-                        )}
-
-                        {user?.role === 'admin' && (
-                            <NavLink to="/admin" className={getNavClassName} onClick={() => setMenuOpen(false)}>
-                                Admin Panel
-                            </NavLink>
-                        )}
+                            {user?.role === 'admin' && (
+                                <NavLink to="/admin" className={getNavClassName} onClick={() => setMenuOpen(false)}>
+                                    <MaterialIcon name="dashboard" /> Admin workspace
+                                </NavLink>
+                            )}
+                        </div>
 
                         {!user ? (
                             <div className="nav-auth-actions">
-                                <NavLink to="/login" className="nav-login" onClick={() => setMenuOpen(false)}>Log in</NavLink>
-                                <NavLink to="/register" className="nav-join" onClick={() => setMenuOpen(false)}>Join now</NavLink>
+                                <NavLink to="/login" className="nav-login" onClick={() => setMenuOpen(false)}><MaterialIcon name="login" /> Log in</NavLink>
+                                <NavLink to="/register" className="nav-join" onClick={() => setMenuOpen(false)}><MaterialIcon name="person_add" /> Join now</NavLink>
                             </div>
                         ) : (
                             <div className="nav-user-actions">
@@ -171,9 +172,9 @@ const Navbar = () => {
                                     title="Profile"
                                 >
                                     <span className="nav-avatar">{user?.name?.charAt(0)?.toUpperCase() || 'U'}</span>
-                                    <span className="nav-user-copy">Hi, {user?.name?.split(' ')[0] || 'Learner'} <MaterialIcon name="expand_more" /></span>
+                                    <span className="nav-user-copy"><strong>{user?.name?.split(' ')[0] || 'Learner'}</strong><small>View profile</small></span>
                                 </NavLink>
-                                <button className="nav-logout" onClick={() => { logout(); setMenuOpen(false); }}><MaterialIcon name="logout" /> Logout</button>
+                                <button className="nav-logout" onClick={() => { logout(); setMenuOpen(false); }} title="Log out"><MaterialIcon name="logout" /> <span>Logout</span></button>
                             </div>
                         )}
                     </div>

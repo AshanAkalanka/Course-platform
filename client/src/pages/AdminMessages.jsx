@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api, { getErrorMessage } from '../api/axios';
 import Alert from '../components/Alert';
 import MaterialIcon from '../components/MaterialIcon';
+import AdminPageHeader from '../components/AdminPageHeader';
 
 const AdminMessages = () => {
     const [messages, setMessages] = useState([]);
@@ -13,6 +14,7 @@ const AdminMessages = () => {
         try {
             const res = await api.get('/contact');
             setMessages(res.data);
+            setSelected((current) => current || res.data[0] || null);
         } catch (err) {
             setError(getErrorMessage(err));
         } finally {
@@ -44,13 +46,23 @@ const AdminMessages = () => {
     };
 
     const unread = messages.filter(m => !m.is_read).length;
+    const read = messages.length - unread;
 
     return (
-        <div className="page">
-            <div className="page-header fade-up">
-                <p className="eyebrow">Admin</p>
-                <h1>Contact Messages {unread > 0 && <span className="msg-unread-badge">{unread} new</span>}</h1>
-                <p className="page-subtitle">View and manage messages submitted through the contact form.</p>
+        <div className="page admin-workspace-page admin-messages-page">
+            <AdminPageHeader
+                icon="mail"
+                eyebrow="Communication"
+                title="Contact inbox"
+                description="Read messages from visitors, track unread requests, and keep the inbox tidy."
+                badge={unread > 0 ? <span className="msg-unread-badge">{unread} new</span> : null}
+                tone="rose"
+            />
+
+            <div className="admin-page-metrics fade-up" aria-label="Message inbox summary">
+                <article><span className="blue"><MaterialIcon name="inbox" /></span><div><strong>{messages.length}</strong><small>Total messages</small></div></article>
+                <article><span className="rose"><MaterialIcon name="mark_email_unread" /></span><div><strong>{unread}</strong><small>Unread</small></div></article>
+                <article><span className="green"><MaterialIcon name="mark_email_read" /></span><div><strong>{read}</strong><small>Read</small></div></article>
             </div>
 
             <Alert type="error" message={error} />
@@ -62,9 +74,9 @@ const AdminMessages = () => {
             )}
 
             {!loading && messages.length > 0 && (
-                <div className="messages-layout fade-up">
-                    {/* Message List */}
+                <div className="messages-layout admin-inbox-layout fade-up">
                     <div className="messages-list">
+                        <div className="admin-inbox-heading"><span>Inbox</span><strong>{messages.length}</strong></div>
                         {messages.map(msg => (
                             <button
                                 key={msg.id}
@@ -81,7 +93,6 @@ const AdminMessages = () => {
                         ))}
                     </div>
 
-                    {/* Message Detail */}
                     <div className="message-detail glass-card">
                         {selected ? (
                             <>

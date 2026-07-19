@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api, { getErrorMessage } from '../api/axios';
 import Alert from '../components/Alert';
 import MaterialIcon from '../components/MaterialIcon';
+import AdminPageHeader from '../components/AdminPageHeader';
 
 const FILTER_ICONS = { all: 'filter_list', pending: 'pending', approved: 'check_circle', rejected: 'cancel' };
 
@@ -53,27 +54,32 @@ const AdminEnrollments = () => {
 
     const filtered = filter === 'all' ? enrollments : enrollments.filter(e => e.status === filter);
     const pendingCount = enrollments.filter(e => e.status === 'pending').length;
+    const statusCount = (status) => enrollments.filter((enrollment) => enrollment.status === status).length;
 
     return (
-        <div className="page">
-            <div className="page-header fade-up">
-                <p className="eyebrow">Admin</p>
-                <h2>Enrollment Requests {pendingCount > 0 && <span className="msg-unread-badge">{pendingCount} pending</span>}</h2>
-                <p className="page-subtitle">Review and approve or reject student enrollment requests for each course.</p>
-            </div>
+        <div className="page admin-workspace-page admin-enrollments-page">
+            <AdminPageHeader
+                icon="school"
+                eyebrow="People and access"
+                title="Enrollment requests"
+                description="Review student access requests and make approval decisions from one focused queue."
+                badge={pendingCount > 0 ? <span className="msg-unread-badge">{pendingCount} pending</span> : null}
+                tone="green"
+            />
 
             <Alert type="success" message={message} />
             <Alert type="error" message={error} />
 
-            <div className="filter-bar fade-up" style={{ flexDirection: 'row', alignItems: 'center', gap: '12px', display: 'flex', flexWrap: 'wrap' }}>
+            <div className="admin-status-filter fade-up" aria-label="Filter enrollment requests">
                 {['all', 'pending', 'approved', 'rejected'].map(s => (
                     <button
                         key={s}
-                        className={filter === s ? 'btn-primary btn-small' : 'btn-ghost btn-small'}
+                        type="button"
+                        className={filter === s ? 'active' : ''}
                         onClick={() => setFilter(s)}
-                        style={{ textTransform: 'capitalize' }}
                     >
-                        <MaterialIcon name={FILTER_ICONS[s]} /> {s}
+                        <MaterialIcon name={FILTER_ICONS[s]} />
+                        <span><b>{s}</b><small>{s === 'all' ? enrollments.length : statusCount(s)}</small></span>
                     </button>
                 ))}
             </div>
@@ -85,7 +91,11 @@ const AdminEnrollments = () => {
             )}
 
             {!loading && filtered.length > 0 && (
-                <div className="admin-table-wrapper fade-up">
+                <div className="admin-table-wrapper admin-data-panel fade-up">
+                    <div className="admin-section-title">
+                        <div><span><MaterialIcon name="fact_check" /></span><div><h3>{filter === 'all' ? 'All requests' : `${filter} requests`}</h3><p>Student and course access details.</p></div></div>
+                        <strong>{filtered.length} shown</strong>
+                    </div>
                     <table className="admin-table">
                         <thead>
                             <tr>

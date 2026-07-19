@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { mergeWithDefaultCategories } = require('../config/defaultCategories');
 
 const ensureCategoriesTable = async () => {
     await pool.execute(`
@@ -74,7 +75,7 @@ const getCourseCategories = async (req, res) => {
              ORDER BY name ASC`
         );
 
-        res.json(rows.map((row) => row.name));
+        res.json(mergeWithDefaultCategories(rows.map((row) => row.name)));
     } catch (error) {
         res.status(500).json({ message: 'Failed to fetch categories' });
     }

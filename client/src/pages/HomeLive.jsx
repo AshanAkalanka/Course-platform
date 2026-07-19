@@ -6,19 +6,7 @@ import Alert from '../components/Alert';
 import CourseCard from '../components/CourseCard';
 import MaterialIcon from '../components/MaterialIcon';
 import { useAuth } from '../context/useAuth';
-
-const tones = ['blue', 'purple', 'pink', 'green', 'amber', 'cyan'];
-
-const getCategoryIcon = (name = '') => {
-    const value = name.toLowerCase();
-    if (value.includes('develop') || value.includes('program')) return 'code';
-    if (value.includes('design')) return 'design_services';
-    if (value.includes('market')) return 'campaign';
-    if (value.includes('business')) return 'business_center';
-    if (value.includes('data') || value.includes('science')) return 'database';
-    if (value.includes('growth') || value.includes('personal')) return 'psychology';
-    return 'category';
-};
+import { getCategoryVisual } from '../data/categoryCatalog';
 
 const HomeLive = () => {
     const { user } = useAuth();
@@ -65,6 +53,7 @@ const HomeLive = () => {
         [courses]
     );
     const latestCourses = courses.slice(0, 4);
+    const featuredCategories = categories.slice(0, 4);
     const currentCourse = learning[0];
 
     const handleSearch = (event) => {
@@ -104,13 +93,25 @@ const HomeLive = () => {
                 </div>
                 {categories.length ? (
                     <div className="category-grid">
-                        {categories.map((category, index) => {
-                            const courseCount = courses.filter((course) => course.category === category).length;
+                        {featuredCategories.map((category, index) => {
+                            const normalizedCategory = category.trim().toLowerCase();
+                            const courseCount = courses.filter(
+                                (course) => course.category?.trim().toLowerCase() === normalizedCategory
+                            ).length;
+                            const visual = getCategoryVisual(category, index);
                             return (
                                 <Link to="/courses" state={{ category }} className="category-card" key={category}>
-                                    <span className={`category-icon ${tones[index % tones.length]}`}><MaterialIcon name={getCategoryIcon(category)} /></span>
-                                    <span><strong>{category}</strong><small>{courseCount} course{courseCount === 1 ? '' : 's'}</small></span>
-                                    <MaterialIcon name="chevron_right" />
+                                    <span className="category-card-cover">
+                                        <img src={visual.image} alt="" loading="lazy" />
+                                        <span className="category-count-badge">
+                                            <strong>{courseCount}</strong>
+                                            <small>course{courseCount === 1 ? '' : 's'}</small>
+                                        </span>
+                                    </span>
+                                    <span className="category-card-copy">
+                                        <small>{visual.label}</small>
+                                        <strong>{category}</strong>
+                                    </span>
                                 </Link>
                             );
                         })}

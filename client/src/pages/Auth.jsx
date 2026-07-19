@@ -19,11 +19,6 @@ const Auth = () => {
         setIsLogin(location.pathname === '/login');
     }, [location.pathname]);
 
-    useEffect(() => {
-        document.body.classList.add('no-scroll');
-        return () => document.body.classList.remove('no-scroll');
-    }, []);
-
     const toggleMode = () => {
         setErrorMessage('');
         setForm({ name: '', email: '', password: '' });

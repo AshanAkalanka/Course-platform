@@ -37,11 +37,6 @@ body {
   line-height: 1.65;
 }
 
-body.no-scroll {
-  overflow: hidden;
-  height: 100vh;
-}
-
 a {
   color: inherit;
   text-decoration: none;
